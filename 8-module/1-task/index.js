@@ -39,6 +39,26 @@ export default class CartIcon {
   }
 
   updatePosition() {
-    // ваш код ...
+    //если элемент выведен, потому что товары добавлены в корзину
+    if (!this.elem.offsetWidth == 0) {
+      //если корзина ушла за пределы окна по вертикали
+      if ((this.elem.getBoundingClientRect().top < window.scrollY) && (document.documentElement.clientWidth > 767)) {
+        this.elem.style.position = "fixed";
+        this.elem.style.top = "50px";
+        this.elem.style.zIndex = "1000";
+        //должна отстоять на 20px от контейнера
+        let container = document.querySelector(".container");
+        //выберем меньшее из двух условий позиционирования
+        this.elem.style.left = Math.min(
+          container.getBoundingClientRect().left + container.offsetWidth + 20,
+          document.documentElement.clientWidth - this.elem.offsetWidth - 10
+        ) + "px"
+      } else {
+        //как только пользователь поднялся вверх,сбросим все условия
+        this.elem.style.position = "";
+        this.elem.style.top = "";
+        this.elem.style.left = "";
+      }
+    }
   }
 }

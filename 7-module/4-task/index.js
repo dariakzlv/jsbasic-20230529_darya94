@@ -3,7 +3,7 @@ export default class StepSlider {
     this.steps = steps;
     this.render();
   }
-
+  
   render() {
     //заберем себе разметку слайдера
     this.elem = document.createElement('DIV');
