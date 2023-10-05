@@ -12,6 +12,7 @@ export default class CartIcon {
   }
 
   update(cart) {
+    
     if (!cart.isEmpty()) {
       this.elem.classList.add('cart-icon_visible');
 
@@ -20,7 +21,8 @@ export default class CartIcon {
           <span class="cart-icon__count">${cart.getTotalCount()}</span>
           <span class="cart-icon__price">€${cart.getTotalPrice().toFixed(2)}</span>
         </div>`;
-
+ 
+      console.log(cart.getTotalPrice())
       this.updatePosition();
 
       this.elem.classList.add('shake');
