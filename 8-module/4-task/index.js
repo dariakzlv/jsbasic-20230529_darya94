@@ -13,23 +13,89 @@ export default class Cart {
   }
 
   addProduct(product) {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    //сперва добавим проверку, которая заставит код работать, только если не null и если аргумент не пустой
+    if(arguments.length > 0 && product != null) {
+      this.productIsAdded = 0;
+      //проверка, есть ли товар в корзине,если товара еще нет, то добавляем его, проверяем по Id
+      for (let cartItem of this.cartItems) {
+        //если айди продукта в корзине и айди текущего продукта совпали
+        if (cartItem.product.id == product.id) {
+          //то продукт добавлен
+          this.productIsAdded = 1;
+        }
+      }
+      //если продукт не добавлен, то добавим
+      let productToAdd = {
+        "product": product,
+        "count": 1,
+      };
+      if (!this.productIsAdded) {
+        this.cartItems.push(productToAdd);
+        this.onProductUpdate(this.cartItems[this.cartItems.length-1]);
+    } else {
+      for (let cartItem of this.cartItems) {
+        //если айди продукта в корзине и айди текущего продукта совпали
+        if (cartItem.product.id == product.id) {
+          //то увеличиваем количество
+          cartItem.count++;
+        }
+        this.onProductUpdate(this.cartItems[this.cartItems.length-1]);
+    }}
+    console.log(this.cartItems)
+  }
   }
 
+  //меняет количество товара при клике на плюс
   updateProductCount(productId, amount) {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    //для каждого элемента проверяем
+    for (let cartItem of this.cartItems) {
+      //если айди товара совпало с тем, на которое кликнули
+      if (cartItem.product.id == productId) {
+        //если нажали на +, то увеличиваем число
+        if (amount == 1) {
+          cartItem.count++;
+          //меняем верстку
+          this.onProductUpdate(this.cartItems[this.cartItems.length-1]);
+        } else {
+          //если на -, то уменьшаем
+          if (cartItem.count > 1) { cartItem.count--; 
+            //меняем верстку
+          this.onProductUpdate(this.cartItems[this.cartItems.length-1]);
+          } else {
+            //если количество достигло нуля, то удаляем этот объект
+            let elemToDelete = this.cartItems.indexOf(cartItem);
+            this.cartItems.splice(elemToDelete, 1);
+            this.onProductUpdate(this.cartItems[this.cartItems.length-1]);
+            //из модалки тоже удаляем
+            this.modalBody.querySelector(`[data-product-id="${productId}"]`).remove();
+          }
+        }
+      }
+    }
   }
-
+  //если корзина пустая
   isEmpty() {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    //если корзина пустая, вернуть тру
+    if (this.cartItems.length) {return false} else {return true};
   }
 
   getTotalCount() {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    this.totalCount = 0;
+    //для каждого элемента в корзине проверяем количество и суммируем с общим
+    for (let cartItem of this.cartItems) {
+      this.totalCount = cartItem.count + this.totalCount;
+
+    }
+    return this.totalCount
   }
 
   getTotalPrice() {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    this.totalPrice = 0;
+    //для каждого товара в корзине смотрим цену, умножаем на количество и все суммируем
+    for (let cartItem of this.cartItems) {
+      this.totalPrice = cartItem.product.price*cartItem.count + this.totalPrice;
+    }
+    return this.totalPrice
   }
 
   renderProduct(product, count) {
@@ -84,17 +150,102 @@ export default class Cart {
   }
 
   renderModal() {
-    // ...ваш код
+    this.modal = new Modal();
+    this.modal.setTitle('Your order');
+    //сначала в боди закинем разметку для каждого товара;
+    this.modalBody = document.createElement('DIV');
+    for (let cartItem of this.cartItems) {
+      this.modalBody.append(this.renderProduct(cartItem.product, cartItem.count));
+    }
+    //теперь закинем форму
+    this.modalBody.append(this.renderOrderForm());
+    //а теперь вызываем метод модалки и вставляем боди
+    this.modal.setBody(this.modalBody);
+    this.modal.open();
+
+    //при клике на кнопку надо менять количество
+    document.addEventListener('click', (event) => {
+      //если евент - это кнопка +
+      if(event.target.closest('.cart-counter__button_plus')) {
+        let amount = 1;
+        let productId = event.target.closest('.cart-product').getAttribute('data-product-id');
+        this.updateProductCount(productId, amount);
+      } else if (event.target.closest('.cart-counter__button_minus')) {
+        let amount = -1;
+        console.log(-1)
+        let productId = event.target.closest('.cart-product').getAttribute('data-product-id');
+        this.updateProductCount(productId, amount);
+      }
+    } )
+
+    //при событии сабмит вызывать метод сабмит
+    this.form = document.querySelector('.cart-form');
+    this.form.addEventListener('submit', (event) => {
+      this.onSubmit(event);
+    })
+
+    //надо, чтобы на выключение модалки, данные там обновлялись
+    document.querySelector('.modal__close').addEventListener('onclick', () => {
+      this.modal = null;
+    })
+
   }
 
+    //меняет верстку, когда менятся количество товара
   onProductUpdate(cartItem) {
-    // ...ваш код
-
     this.cartIcon.update(this);
+    //обновлять числа нужно, только если модальное окно открыто
+    if (document.body.classList.contains('is-modal-open')) {
+      //если в корзине ничего нет, то закрываем модалку
+      if (this.cartItems.length == 0) {
+        console.log(0)
+        this.modal.close();
+      } else {
+        let productId = cartItem.product.id;
+      //нам надо менять количество товара, его стоимость и общую стоимость
+      let itemCount = this.modalBody.querySelector(`[data-product-id="${productId}"] .cart-counter__count`);
+      let itemPrice = this.modalBody.querySelector(`[data-product-id="${productId}"] .cart-product__price`);
+      let totalPrice = this.modalBody.querySelector('.cart-buttons__info-price');
+      itemCount.innerHTML = `${cartItem.count}`;
+      itemPrice.innerHTML = `€${(cartItem.product.price*cartItem.count).toFixed(2)}`;
+      totalPrice.innerHTML = `€${this.getTotalPrice().toFixed(2)}`
+      }
+    }
   }
 
-  onSubmit(event) {
-    // ...ваш код
+  async onSubmit(event) {
+    //уберем базовое событие
+    event.preventDefault();
+    this.submitButton = this.form.querySelector('[type="submit"]');
+    this.submitButton.classList.add('is-loading');
+    
+    //теперь надо отправить POST запрос c помощью fetch
+    //сформируем formData из формы
+    let fd = new FormData (this.form);
+    //вызовем POST метод, отправим им наши данные из формы
+    let response = await fetch('https://httpbin.org/post', {
+      method: 'POST',
+      body: fd
+    })
+    
+    //надо проверить, была ли отправка данных успешной
+    //для этого надо узнать статус
+    //если окей, то заменим данные
+    if (response.ok) {
+      
+      this.submitButton.classList.remove('is-loading');
+      this.modal.setTitle('Success!');
+      this.modalBody.innerHTML = `<div class="modal__body-inner">
+      <p>
+        Order successful! Your order is being cooked :) <br>
+        We’ll notify you about delivery time shortly.<br>
+        <img src="/assets/images/delivery.gif">
+      </p>
+    </div>`;
+      this.cartItems.length = 0;
+      this.onProductUpdate(this.cartItems);
+    }
+
   };
 
   addEventListeners() {
