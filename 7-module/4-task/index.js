@@ -1,6 +1,7 @@
 export default class StepSlider {
   constructor({ steps, value = 0 }) {
     this.steps = steps;
+    this.value = value;
     this.render();
   }
   
@@ -33,6 +34,14 @@ export default class StepSlider {
     }
     this.stepsContainer.querySelector('span').classList.add('slider__step-active');
     this.thumb = this.elem.querySelector('.slider__thumb');
+    //пропишем, какой сейчас заполнен, то есть какое value изначально
+      this.thumb.style.left = `${this.value/(this.steps-1)*100}%`;
+      //аналогично изменим ширину закраски
+      let progress = this.elem.querySelector('.slider__progress');
+      progress.style.width = `${this.value/(this.steps-1)*100}%`;
+      let sliderValue = this.elem.querySelector('.slider__value');
+      sliderValue.innerHTML = `${this.value}`;
+
     //событие на клик
     this.elem.addEventListener('click', (event) => {
       //вычислим ближайшее целое число, к которому кликнули
@@ -48,7 +57,6 @@ export default class StepSlider {
       let valuePercents = value/(this.steps-1)*100;
 
       //теперь запишем новое значение в slider value
-      let sliderValue = this.elem.querySelector('.slider__value');
       sliderValue.innerHTML = `${value}`;
       
       //старый активный надо стереть, для этого будем записывать все активные, и если коллекция что-то содержит, то стираем
@@ -60,7 +68,6 @@ export default class StepSlider {
       stepItems[value].classList.add('slider__step-active');
 
       //теперь надо переместить ползунок, найдем его и изменим левое положение в стилях
-      this.thumb = this.elem.querySelector('.slider__thumb');
       this.thumb.style.left = `${valuePercents}%`;
       //аналогично изменим ширину закраски
       let progress = this.elem.querySelector('.slider__progress');

@@ -12,7 +12,7 @@ export default class ProductGrid {
       //создадим грид, куда положим карточки
       this.elem = document.createElement('DIV');
       //положим его в контейнер
-      document.querySelector('#container').append(this.elem);
+      document.querySelector('.container').append(this.elem);
       //дальше навесим класс и положим внутрь разметку внутреннюю
       this.elem.classList.add('products-grid');
       this.elem.innerHTML = `

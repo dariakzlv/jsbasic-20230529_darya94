@@ -24,6 +24,7 @@ export default class RibbonMenu {
     </button>`
     //задаем то, что внутри nav, обращаемся по классу к nav
     let ribbonInner = this.elem.querySelector('.ribbon__inner');
+    ribbonInner.style.overflow = 'hidden'
     //теперь создаем саму разметку категорий, забираем из объекта
     ribbonInner.innerHTML = this.categories
       .map(({id, name}) => `

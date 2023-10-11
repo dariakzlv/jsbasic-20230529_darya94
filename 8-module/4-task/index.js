@@ -52,24 +52,13 @@ export default class Cart {
       //если айди товара совпало с тем, на которое кликнули
       if (cartItem.product.id == productId) {
         //если нажали на +, то увеличиваем число
-        if (amount == 1) {
-          cartItem.count++;
-          //меняем верстку
-          this.onProductUpdate(this.cartItems[this.cartItems.length-1]);
-        } else {
-          //если на -, то уменьшаем
-          if (cartItem.count > 1) { cartItem.count--; 
-            //меняем верстку
-          this.onProductUpdate(this.cartItems[this.cartItems.length-1]);
-          } else {
-            //если количество достигло нуля, то удаляем этот объект
-            let elemToDelete = this.cartItems.indexOf(cartItem);
-            this.cartItems.splice(elemToDelete, 1);
-            this.onProductUpdate(this.cartItems[this.cartItems.length-1]);
-            //из модалки тоже удаляем
-            this.modalBody.querySelector(`[data-product-id="${productId}"]`).remove();
-          }
-        }
+        cartItem.count += amount;
+
+      if (cartItem.count == 0) {
+        this.cartItems.splice(this.cartItems.indexOf(cartItem), 1);
+      }
+
+      this.onProductUpdate(cartItem);
       }
     }
   }
@@ -164,9 +153,10 @@ export default class Cart {
     this.modal.open();
 
     //при клике на кнопку надо менять количество
-    document.addEventListener('click', (event) => {
+    this.modalBody.addEventListener('click', (event) => {
       //если евент - это кнопка +
       if(event.target.closest('.cart-counter__button_plus')) {
+        console.log(1)
         let amount = 1;
         let productId = event.target.closest('.cart-product').getAttribute('data-product-id');
         this.updateProductCount(productId, amount);
@@ -187,6 +177,7 @@ export default class Cart {
     //надо, чтобы на выключение модалки, данные там обновлялись
     document.querySelector('.modal__close').addEventListener('onclick', () => {
       this.modal = null;
+      this.modalBody = null;
     })
 
   }
@@ -200,15 +191,20 @@ export default class Cart {
       if (this.cartItems.length == 0) {
         console.log(0)
         this.modal.close();
+        return
       } else {
-        let productId = cartItem.product.id;
+      let productId = cartItem.product.id;
       //нам надо менять количество товара, его стоимость и общую стоимость
       let itemCount = this.modalBody.querySelector(`[data-product-id="${productId}"] .cart-counter__count`);
       let itemPrice = this.modalBody.querySelector(`[data-product-id="${productId}"] .cart-product__price`);
       let totalPrice = this.modalBody.querySelector('.cart-buttons__info-price');
-      itemCount.innerHTML = `${cartItem.count}`;
-      itemPrice.innerHTML = `€${(cartItem.product.price*cartItem.count).toFixed(2)}`;
-      totalPrice.innerHTML = `€${this.getTotalPrice().toFixed(2)}`
+      if (cartItem.count == 0) {
+        this.modalBody.querySelector(`[data-product-id="${productId}"]`).remove();
+      } else {
+        itemCount.innerHTML = `${cartItem.count}`;
+        itemPrice.innerHTML = `€${(cartItem.product.price*cartItem.count).toFixed(2)}`;
+        totalPrice.innerHTML = `€${this.getTotalPrice().toFixed(2)}`
+      }
       }
     }
   }
@@ -218,7 +214,6 @@ export default class Cart {
     event.preventDefault();
     this.submitButton = this.form.querySelector('[type="submit"]');
     this.submitButton.classList.add('is-loading');
-    
     //теперь надо отправить POST запрос c помощью fetch
     //сформируем formData из формы
     let fd = new FormData (this.form);
@@ -232,7 +227,6 @@ export default class Cart {
     //для этого надо узнать статус
     //если окей, то заменим данные
     if (response.ok) {
-      
       this.submitButton.classList.remove('is-loading');
       this.modal.setTitle('Success!');
       this.modalBody.innerHTML = `<div class="modal__body-inner">
@@ -243,7 +237,7 @@ export default class Cart {
       </p>
     </div>`;
       this.cartItems.length = 0;
-      this.onProductUpdate(this.cartItems);
+      this.cartIcon.update(this);
     }
 
   };
@@ -252,4 +246,3 @@ export default class Cart {
     this.cartIcon.elem.onclick = () => this.renderModal();
   }
 }
-
